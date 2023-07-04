@@ -1,0 +1,11 @@
+pandas
+numpy
+urlparse
+Optional
+Dict
+RegexpTokenizer
+matplotlib.pyplot
+seaborn
+LabelEncoder
+Sklearn
+joblib
