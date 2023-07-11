@@ -1,5 +1,6 @@
 #preprocessing steps
 import pandas as pd
+import psutil
 from urllib import parse, request
 #from urllib.parse import urlparse
 from typing import Optional, Dict
