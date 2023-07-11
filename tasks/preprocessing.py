@@ -1,6 +1,7 @@
 #preprocessing steps
 import pandas as pd
-from urllib.parse import urlparse
+from urllib import parse, request
+#from urllib.parse import urlparse
 from typing import Optional, Dict
 import tldextract
 from nltk.tokenize import RegexpTokenizer
