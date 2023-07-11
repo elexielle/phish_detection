@@ -1,6 +1,6 @@
 pandas
 numpy
-urlparse
+urllib.parse
 Optional
 Dict
 RegexpTokenizer
