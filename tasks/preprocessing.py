@@ -1,8 +1,9 @@
 #preprocessing steps
 import pandas as pd
-import psutil
-from urllib import parse, request
+#import psutil
+#from urllib import parse, request
 #from urllib.parse import urlparse
+import urllib3
 from typing import Optional, Dict
 import tldextract
 from nltk.tokenize import RegexpTokenizer

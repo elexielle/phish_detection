@@ -1,6 +1,6 @@
 pandas
 numpy
-urllib
+urllib3
 Optional
 Dict
 RegexpTokenizer
