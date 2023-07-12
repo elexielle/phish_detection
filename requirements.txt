@@ -3,7 +3,7 @@ numpy
 urllib3
 Optional
 Dict
-RegexpTokenizer
+nltk
 matplotlib.pyplot
 seaborn
 wordcloud
