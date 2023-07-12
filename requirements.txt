@@ -4,7 +4,7 @@ urllib3
 Optional
 Dict
 nltk
-matplotlib.pyplot
+matplotlib
 seaborn
 wordcloud
 LabelEncoder
