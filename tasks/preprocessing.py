@@ -1,28 +1,27 @@
 #preprocessing steps
 import pandas as pd
-#import psutil
 #from urllib import parse, request
-#from urllib.parse import urlparse
+from urllib.parse import urlparse
 import urllib3
 from typing import Optional, Dict
 import tldextract
 from nltk.tokenize import RegexpTokenizer
 import nltk
 
+
 #extracted feature function
 def extract_features(url: str) -> pd.DataFrame:
     df = pd.DataFrame({'url': [url]})
-    
-    #for url parsing
+
     def parse_url(url: str) -> Optional[Dict[str, str]]:
         try:
             no_scheme = not url.startswith('https://') and not url.startswith('http://')
             if no_scheme:
                 parsed_url = urlparse(f"http://{url}")
                 url_dict = {
-                    "scheme": None, # not established a value for this
+                    "scheme": None,
                     "netloc": parsed_url.netloc,
-                    "domain": parsed_url.netloc.split(':')[0], # extract domain from netloc
+                    "domain": parsed_url.netloc.split(':')[0],
                     "path": parsed_url.path,
                     "params": parsed_url.params,
                     "query": parsed_url.query,
@@ -33,46 +32,35 @@ def extract_features(url: str) -> pd.DataFrame:
                 url_dict = {
                     "scheme": parsed_url.scheme,
                     "netloc": parsed_url.netloc,
-                    "domain": parsed_url.netloc.split(':')[0], # extract domain from netloc
+                    "domain": parsed_url.netloc.split(':')[0],
                     "path": parsed_url.path,
                     "params": parsed_url.params,
                     "query": parsed_url.query,
                     "fragment": parsed_url.fragment,
                 }
 
-            # Split path into directory and file
             directory, file = parsed_url.path.rsplit('/', 1)
             url_dict['directory'] = directory
             url_dict['file'] = file
 
             return url_dict
-        
-        except AttributeError:
-            print("Invalid link: AttributeError")
+
+        except (AttributeError, ValueError):
             return None
 
-        except Exception as e:
-            print(f"Invalid link: {e}")
-            return None
-    
-    # # Check if parsed_url is None
-    # if df['parsed_url'].isnull().any():
-    #     print("Invalid link")
-    # else:
-    
-        # def get_length(row):
-        #     return pd.Series({
-        #         'url_length': len(row['url']),
-        #         'domain_length': len(row['domain'])
-        #     })
-        
     def get_length(row):
         domain_length = len(row.get('domain', ''))
         return pd.Series({
             'url_length': len(row['url']),
             'domain_length': domain_length
-            })
+        })
 
+    tokenizer = RegexpTokenizer(r'[A-Za-z]+')
+    def tokenize_domain(netloc: str) -> str:
+        split_domain = tldextract.extract(netloc)
+        no_tld = str(split_domain.subdomain + '.' + split_domain.domain)
+        return " ".join(map(str, tokenizer.tokenize(no_tld)))
+    
     #server domain
     def extract_server_client_domain(domains):
         results = []
@@ -92,55 +80,41 @@ def extract_features(url: str) -> pd.DataFrame:
             return 0
         return subdomain.count('.') + 1
 
-    #domain tokens
-    tokenizer = RegexpTokenizer(r'[A-Za-z]+')
-    def tokenize_domain(netloc: str) -> str:
-        split_domain = tldextract.extract(netloc)
-        no_tld = str(split_domain.subdomain +'.'+ split_domain.domain)
-        return " ".join(map(str,tokenizer.tokenize(no_tld)))
+    df['parsed_url'] = df.url.apply(parse_url)
+    
+    if df['parsed_url'].isnull().any():
+        print("Invalid link")
+        return None
 
-    #applying the functions
-    df['parsed_url'] = df.url.apply(parse_url) #parse urls in url_df
     df = pd.concat([
         df.drop(['parsed_url'], axis=1),
         df['parsed_url'].apply(pd.Series)], axis=1)
-    
-    #to get the length of characters
+
     length_df = df.apply(get_length, axis=1)
     df = df.merge(length_df, left_index=True, right_index=True)
-    
-    #tld
+
     df["tld"] = df.netloc.apply(lambda nl: tldextract.extract(nl).suffix)
-    df['tld'] = df['tld'].replace('','None')
-    
-    #count symbols
+    df['tld'] = df['tld'].replace('', 'None')
+
     symbols = '.-'
     for char in symbols:
         df['qnty_' + char + '_url'] = df['url'].apply(lambda x: x.count(char))
         df['qnty_' + char + '_domain'] = df['domain'].apply(lambda x: x.count(char))
-    
-    #server domain
-    df['is_server_domain'] = extract_server_client_domain(df['domain'])
-    
-    #num of subdomains
-    df['num_subdomains'] = df['netloc'].apply(lambda net: get_num_subdomains(net))
-    
-    #domain tokens
-    df['domain_tokens'] = df['netloc'].apply(lambda net: tokenize_domain(net))
-    
-    #tokens
-    tok= RegexpTokenizer(r'[A-Za-z0-9]+')
-    df['tokenized_url'] = df['url'].map(lambda x: tok.tokenize(x))
-    
-    #drop unecessary columns
-    cols_to_drop = ['netloc', 'domain', 'path', 'params', 'query', 'scheme',
-            'fragment', 'directory', 'file']
-    df.drop(cols_to_drop, axis=1, inplace=True)
-        
-    return df
 
+    df['is_server_domain'] = extract_server_client_domain(df['domain'])
+    df['num_subdomains'] = df['netloc'].apply(lambda net: get_num_subdomains(net))
+    df['domain_tokens'] = df['netloc'].apply(lambda net: tokenize_domain(net))
+
+    tok = RegexpTokenizer(r'[A-Za-z0-9]+')
+    df['tokenized_url'] = df['url'].map(lambda x: tok.tokenize(x))
+
+    cols_to_drop = ['netloc', 'domain', 'path', 'params', 'query', 'scheme', 'fragment', 'directory', 'file']
+    df.drop(cols_to_drop, axis=1, inplace=True)
+
+    return df
 
 #exceptions:
 # url = extract_features("http://americantowergroup.in") #phish
 # url = extract_features("https://github.com") #legit
 # # print(url)
+print(extract_features("https://dhl-express.serveirc.com/dhl/DHH/dhl/"))
