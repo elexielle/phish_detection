@@ -7,6 +7,6 @@ nltk
 matplotlib
 seaborn
 wordcloud
-Sklearn
+scikit-learn
 joblib
 
