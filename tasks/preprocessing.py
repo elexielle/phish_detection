@@ -6,7 +6,7 @@ import pandas as pd
 import urllib3
 from typing import Optional, Dict
 import tldextract
-#from nltk.tokenize import RegexpTokenizer
+from nltk.tokenize import RegexpTokenizer
 import nltk
 
 #extracted feature function

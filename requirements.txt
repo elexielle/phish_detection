@@ -10,4 +10,5 @@ wordcloud
 scikit-learn
 joblib
 tldextract
+RegexpTokenizer
 
