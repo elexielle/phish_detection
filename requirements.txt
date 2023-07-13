@@ -9,4 +9,5 @@ seaborn
 wordcloud
 scikit-learn
 joblib
+tldextract
 
